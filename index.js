@@ -2,6 +2,7 @@ const inquirer = require('inquirer');
 const mysql = require('mysql2');
 const generateDatabase = require('./utils/generateDatabase');
 
+// Promt variables
 const promtMain = [
     {
         type: 'list',
@@ -143,3 +144,25 @@ const promptDeleteDepartment = [
         message: 'Are you sure you want to delete this department?',
     },
 ];
+
+// Connect to database
+const db = mysql.createConnection(
+    {
+        host: 'localhost',
+        user: '',
+        password: '',
+        database: 'company_db'
+    },
+    console.log('Connected to the database')
+);
+
+// Display main prompt, hand off to next prompt
+function displayMain() {
+
+}
+
+// Initialize connection to database and start program
+db.connect(function(err) {
+    if(err) throw err;
+    displayMain();
+});
