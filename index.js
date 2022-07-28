@@ -237,14 +237,13 @@ async function addEmployee() {
     inquirer
         .prompt(promptAddEmployee)
         .then((response) => {
-            let firstName = response.first_name
-            let lastName = response.last_name
-            let roleName = response.role_id
+            let firstName = response.first_name;
+            let lastName = response.last_name;
+            let roleName = response.role_id;
             let managerFirstName = response.manager_id.split(" ")[0];
             let managerLastName = response.manager_id.split(" ")[1];
             const roleID = `SELECT id FROM employee_role WHERE title="${roleName}"`;
-            const managerID = `SELECT id FROM employee WHERE (first_name="${managerFirstName}", last_name="${managerLastName}")`
-            
+            const managerID = `SELECT id FROM employee WHERE (first_name="${managerFirstName}", last_name="${managerLastName}")`;
             const insertEmployee = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${firstName}", "${lastName}", ${roleID}, ${managerID})`;
             await db.connect(function(err) {
                 if(err) throw err;
@@ -260,10 +259,17 @@ async function addRole() {
     inquirer
         .prompt(promptAddRole)
         .then((response) => {
+            let roleName = response.role_name;
+            let roleSalary = response.role_salary;
+            let departmentName = response.department_id;
+            const departmentID = `SELECT id FROM department WHERE department_name="${departmentName}"`;
+            const insertRole = `INSERT INTO employee_role (role_name, role_salary, department_id) VALUES ("${roleName}", "${roleSalary}", ${departmentID})`;
             await db.connect(function(err) {
                 if(err) throw err;
-                db.query()
-            })
+                db.query(insertRole, function (err, results) {
+                    if(err) throw err;
+                })
+            });
             await displayMain();
         });
 }
@@ -272,9 +278,13 @@ async function addDepartment() {
     inquirer
         .prompt(promptAddDepartment)
         .then((response) => {
+            let departmentName = response.department_name;
+            const insertDepartment = `INSERT INTO department (department_name) VALUES ("${departmentName}")`;
             await db.connect(function(err) {
                 if(err) throw err;
-                db.query()
+                db.query(insertDepartment, function (err, results) {
+                    if(err) throw err;
+                })
             })
             await displayMain();
         });
