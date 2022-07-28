@@ -195,6 +195,78 @@ function displayMain() {
         });
 }
 
+function viewBudgetByDepartment() {
+    inquirer
+        .prompt(promptBudgetByDepartment)
+        .then((response) => {
+
+        });
+}
+
+function updateEmployeeRole() {
+    inquirer
+        .prompt(promptUpdateEmployeeRole)
+        .then((response) => {
+
+        });
+}
+
+function updateEmployeeManager() {
+    inquirer
+        .prompt(promptUpdateEmployeeManager)
+        .then((response) => {
+
+        });
+}
+
+function addEmployee() {
+    inquirer
+        .prompt(promptAddEmployee)
+        .then((response) => {
+
+        });
+}
+
+function addRole() {
+    inquirer
+        .prompt(promptAddRole)
+        .then((response) => {
+
+        });
+}
+
+function addDepartment() {
+    inquirer
+        .prompt(promptAddDepartment)
+        .then((response) => {
+
+        });
+}
+
+function deleteEmployee() {
+    inquirer
+        .prompt(promptDeleteEmployee)
+        .then((response) => {
+
+        });
+}
+
+function deleteRole() {
+    inquirer
+        .prompt(promptDeleteRole)
+        .then((response) => {
+
+        });
+}
+
+function deleteDepartment() {
+    inquirer
+        .prompt(promptDeleteDepartment)
+        .then((response) => {
+
+        });
+}
+
 // Initialize connection to database and start program
 db.connect(function(err) {
     if(err) throw err;
