@@ -1,6 +1,11 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
-const generateDatabase = require('./utils/generateDatabase');
+// const generateDatabase = require('./utils/generateDatabase');
+
+// Global list variables
+const employeeList = [];
+const roleList = [];
+const departmentList = [];
 
 // Promt variables
 const promptMain = [
@@ -15,90 +20,90 @@ const promptMain = [
 const promptBudgetByDepartment = [
     {
         type: 'list',
-        name: 'budget by department',
+        name: 'department_id',
         message: "Which department's total utilized budget would you like to view?",
-        choices: [],
+        choices: departmentList,
     },
 ];
 
 const promptUpdateEmployeeRole = [
     {
         type: 'list',
-        name: 'update role for',
+        name: 'employee_id',
         message: "Which employee's role do you want to update?",
-        choices: [],
+        choices: employeeList,
     },
     {
         type: 'list',
-        name: 'update employee role',
+        name: 'role_id',
         message: "Which role do you want to assign the selected employee?",
-        choices: [],
+        choices: roleList,
     },
 ];
 
 const promptUpdateEmployeeManager = [
     {
         type: 'list',
-        name: 'update manager for',
+        name: 'employee_id',
         message: "Which employee's manager do you want to update?",
-        choices: [],
+        choices: employeeList,
     },
     {
         type: 'list',
-        name: 'update employee manager',
+        name: 'manager_id',
         message: "Which manager do you want to assign the selected employee?",
-        choices: [],
+        choices: employeeList,
     },
 ];
 
 const promptAddEmployee = [
     {
         type: 'input',
-        name: 'add employee first name',
+        name: 'first_name',
         message: "What is the employee's first name?",
     },
     {
         type: 'input',
-        name: 'add employee last name',
+        name: 'last_name',
         message: "What is the employee's last name?",
     },
     {
         type: 'list',
-        name: 'add employee role',
+        name: 'role_id',
         message: "What is the employee's role?",
-        choices: [],
+        choices: roleList,
     },
     {
         type: 'list',
-        name: 'add employee manager',
+        name: 'manager_id',
         message: "Who is the employee's manager?",
-        choices: [],
+        choices: employeeList,
     },
 ];
 
 const promptAddRole = [
     {
         type: 'input',
-        name: 'add role name',
+        name: 'role_name',
         message: 'What is the name of the role?',
     },
     {
         type: 'input',
-        name: 'add role salary',
+        name: 'role_salary',
         message: 'What is the salary of the role?',
     },
     {
         type: 'list',
-        name: 'add role department',
+        name: 'department_id',
         message: 'Which department does the role belong to?',
-        choices: [],
+        choices: departmentList,
     },
 ];
 
 const promptAddDepartment = [
     {
         type: 'input',
-        name: 'add department',
+        name: 'department_name',
         message: 'What is the name of the department?',
     },
 ];
@@ -106,13 +111,13 @@ const promptAddDepartment = [
 const promptDeleteEmployee = [
     {
         type: 'list',
-        name: 'delete employee',
+        name: 'employee_id',
         message: 'What is the name of the employee?',
-        choices: [],
+        choices: employeeList,
     },
     {
         type: 'confirm',
-        name: 'confirm delete employee',
+        name: 'delete_employee',
         message: 'Are you sure you want to delete this employee?',
     },
 ];
@@ -120,13 +125,13 @@ const promptDeleteEmployee = [
 const promptDeleteRole = [
     {
         type: 'list',
-        name: 'delete role',
+        name: 'role_id',
         message: 'What is the name of the role?',
-        choices: [],
+        choices: roleList,
     },
     {
         type: 'confirm',
-        name: 'confirm delete role',
+        name: 'delete_role',
         message: 'Are you sure you want to delete this role?',
     },
 ];
@@ -134,13 +139,13 @@ const promptDeleteRole = [
 const promptDeleteDepartment = [
     {
         type: 'list',
-        name: 'delete department',
+        name: 'department_id',
         message: 'What is the name of the department?',
-        choices: [],
+        choices: departmentList,
     },
     {
         type: 'confirm',
-        name: 'confirm delete department',
+        name: 'delete_department',
         message: 'Are you sure you want to delete this department?',
     },
 ];
@@ -195,75 +200,119 @@ function displayMain() {
         });
 }
 
-function viewBudgetByDepartment() {
+async function viewBudgetByDepartment() {
     inquirer
         .prompt(promptBudgetByDepartment)
         .then((response) => {
-
+            await db.query()
+            await displayMain();
         });
 }
 
-function updateEmployeeRole() {
+async function updateEmployeeRole() {
     inquirer
         .prompt(promptUpdateEmployeeRole)
         .then((response) => {
-
+            await db.connect(function(err) {
+                if(err) throw err;
+                db.query()
+            })
+            await displayMain();
         });
 }
 
-function updateEmployeeManager() {
+async function updateEmployeeManager() {
     inquirer
         .prompt(promptUpdateEmployeeManager)
         .then((response) => {
-
+            await db.connect(function(err) {
+                if(err) throw err;
+                db.query()
+            })
+            await displayMain();
         });
 }
 
-function addEmployee() {
+async function addEmployee() {
     inquirer
         .prompt(promptAddEmployee)
         .then((response) => {
-
+            let firstName = response.first_name
+            let lastName = response.last_name
+            let roleName = response.role_id
+            let managerFirstName = response.manager_id.split(" ")[0];
+            let managerLastName = response.manager_id.split(" ")[1];
+            const roleID = `SELECT id FROM employee_role WHERE title="${roleName}"`;
+            const managerID = `SELECT id FROM employee WHERE (first_name="${managerFirstName}", last_name="${managerLastName}")`
+            
+            const insertEmployee = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${firstName}", "${lastName}", ${roleID}, ${managerID})`;
+            await db.connect(function(err) {
+                if(err) throw err;
+                db.query(insertEmployee, function (err, result) {
+                    if(err) throw err;
+                })
+            });
+            await displayMain();
         });
 }
 
-function addRole() {
+async function addRole() {
     inquirer
         .prompt(promptAddRole)
         .then((response) => {
-
+            await db.connect(function(err) {
+                if(err) throw err;
+                db.query()
+            })
+            await displayMain();
         });
 }
 
-function addDepartment() {
+async function addDepartment() {
     inquirer
         .prompt(promptAddDepartment)
         .then((response) => {
-
+            await db.connect(function(err) {
+                if(err) throw err;
+                db.query()
+            })
+            await displayMain();
         });
 }
 
-function deleteEmployee() {
+async function deleteEmployee() {
     inquirer
         .prompt(promptDeleteEmployee)
         .then((response) => {
-
+            await db.connect(function(err) {
+                if(err) throw err;
+                db.query()
+            })
+            await displayMain();
         });
 }
 
-function deleteRole() {
+async function deleteRole() {
     inquirer
         .prompt(promptDeleteRole)
         .then((response) => {
-
+            await db.connect(function(err) {
+                if(err) throw err;
+                db.query()
+            })
+            await displayMain();
         });
 }
 
-function deleteDepartment() {
+async function deleteDepartment() {
     inquirer
         .prompt(promptDeleteDepartment)
         .then((response) => {
-
+            await db.connect(function(err) {
+                if(err) throw err;
+                db.query()
+            })
+            await displayMain();
         });
 }
 
