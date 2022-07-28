@@ -3,7 +3,7 @@ const mysql = require('mysql2');
 const generateDatabase = require('./utils/generateDatabase');
 
 // Promt variables
-const promtMain = [
+const promptMain = [
     {
         type: 'list',
         name: 'main menu',
@@ -158,7 +158,41 @@ const db = mysql.createConnection(
 
 // Display main prompt, hand off to next prompt
 function displayMain() {
-
+    inquirer
+        .prompt(promptMain)
+        .then((response) => {
+            if (response.includes("View All Employees")) {
+                viewAllEmployees();
+            } else if (response.includes("View All Roles")) {
+                viewAllRoles();
+            } else if (response.includes("View All Departments")) {
+                viewAllDepartments();
+            } else if (response.includes("View Employees By Manager")) {
+                viewEmployeesByManager();
+            } else if (response.includes("View Employees By Department")) {
+                viewEmployeesByDepartment();
+            } else if (response.includes("View Total Utilized Budget By Department")) {
+                viewBudgetByDepartment();
+            } else if (response.includes("Update Employee Role")) {
+                updateEmployeeRole();
+            } else if (response.includes("Update Employee Manager")) {
+                updateEmployeeManager();
+            } else if (response.includes("Add Employee")) {
+                addEmployee();
+            } else if (response.includes("Add Role")) {
+                addRole();
+            } else if (response.includes("Add Department")) {
+                addDepartment();
+            } else if (response.includes("Delete Employee")) {
+                deleteEmployee();
+            } else if (response.includes("Delete Role")) {
+                deleteRole();
+            } else if (response.includes("Delete Department")) {
+                deleteDepartment();
+            } else {
+                db.end();
+            }
+        });
 }
 
 // Initialize connection to database and start program
