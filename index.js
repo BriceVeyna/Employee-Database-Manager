@@ -30,13 +30,13 @@ const promptBudgetByDepartment = [
 const promptUpdateEmployeeRole = [
     {
         type: 'list',
-        name: 'employee_id',
+        name: 'employee_name',
         message: "Which employee's role do you want to update?",
         choices: employeeList,
     },
     {
         type: 'list',
-        name: 'role_id',
+        name: 'role_name',
         message: "Which role do you want to assign the selected employee?",
         choices: roleList,
     },
@@ -70,7 +70,7 @@ const promptAddEmployee = [
     },
     {
         type: 'list',
-        name: 'role_id',
+        name: 'role_name',
         message: "What is the employee's role?",
         choices: roleList,
     },
@@ -95,7 +95,7 @@ const promptAddRole = [
     },
     {
         type: 'list',
-        name: 'department_id',
+        name: 'department_name',
         message: 'Which department does the role belong to?',
         choices: departmentList,
     },
@@ -284,10 +284,18 @@ function updateEmployeeRole() {
     inquirer
         .prompt(promptUpdateEmployeeRole)
         .then((response) => {
+            let roleID = `SELECT id FROM employee_role WHERE title = "${response.role_name}"`
+            let updateRole = `UPDATE employee SET role_id = ${roleID} WHERE first_name = SUBSTRING_INDEX(${response.employee_name}, ' ', 1) AND last_name = SUBSTRING_INDEX(${response.employee_name}, ' ', 2)`
             db.connect(async function(err) {
                 if(err) throw err;
-                await db.queryPromise()
-            })
+                await db.queryPromise(roleID, function (err, result) {
+                    if(err) throw err;
+                    roleID = result;
+                });
+                await db.queryPromise(updateRole, function (err) {
+                    if(err) throw err;
+                });
+            });
             displayMain();
         });
 }
@@ -309,14 +317,13 @@ function addEmployee() {
     inquirer
         .prompt(promptAddEmployee)
         .then((response) => {
-            let firstName = response.first_name;
-            let lastName = response.last_name;
-            let roleName = response.role_id;
+            let full_name = response.first_name.concat(" ", response.last_name);
+            employeeList.push(full_name);
             let managerFirstName = response.manager_id.split(" ")[0];
             let managerLastName = response.manager_id.split(" ")[1];
-            let roleID = `SELECT id FROM employee_role WHERE title="${roleName}"`;
+            let roleID = `SELECT id FROM employee_role WHERE title="${response.role_name}"`;
             let managerID = `SELECT id FROM employee WHERE (first_name="${managerFirstName}", last_name="${managerLastName}")`;
-            const insertEmployee = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${firstName}", "${lastName}", ${roleID}, ${managerID})`;
+            const insertEmployee = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${response.first_name}", "${response.last_name}", ${roleID}, ${managerID})`;
             db.connect(async function(err) {
                 if(err) throw err;
                 await db.queryPromise(roleID, function (err, result) {
@@ -339,11 +346,9 @@ function addRole() {
     inquirer
         .prompt(promptAddRole)
         .then((response) => {
-            let roleName = response.role_name;
-            let roleSalary = response.role_salary;
-            let departmentName = response.department_id;
-            const departmentID = `SELECT id FROM department WHERE department_name="${departmentName}"`;
-            const insertRole = `INSERT INTO employee_role (role_name, role_salary, department_id) VALUES ("${roleName}", "${roleSalary}", ${departmentID})`;
+            roleList.push(response.role_name);
+            const departmentID = `SELECT id FROM department WHERE department_name="${response.department_name}"`;
+            const insertRole = `INSERT INTO employee_role (role_name, role_salary, department_id) VALUES ("${response.role_name}", "${response.role_salary}", ${departmentID})`;
             db.connect(async function(err) {
                 if(err) throw err;
                 await db.queryPromise(insertRole, function (err, results) {
@@ -358,8 +363,8 @@ function addDepartment() {
     inquirer
         .prompt(promptAddDepartment)
         .then((response) => {
-            let departmentName = response.department_name;
-            const insertDepartment = `INSERT INTO department (department_name) VALUES ("${departmentName}")`;
+            departmentList.push(response.department_name)
+            const insertDepartment = `INSERT INTO department (department_name) VALUES ("${response.department_name}")`;
             db.connect(async function(err) {
                 if(err) throw err;
                 await db.queryPromise(insertDepartment, function (err, results) {
