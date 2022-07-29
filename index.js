@@ -200,6 +200,69 @@ function displayMain() {
         });
 }
 
+// View functions
+function viewAllEmployees() {
+    const viewEmployees = 'SELECT * FROM employee';
+    db.connect(async function(err) {
+        if(err) throw err;
+        await db.query(viewEmployees, function(err, results) {
+            if(err) throw err;
+            console.table(results);
+        });
+    });
+    displayMain();
+}
+
+function viewAllRoles() {
+    const viewRoles = 'SELECT * FROM employee_role';
+    db.connect(async function(err) {
+        if(err) throw err;
+        await db.query(viewRoles, function(err, results) {
+            if(err) throw err;
+            console.table(results);
+        });
+    });
+    displayMain();
+}
+
+function viewAllDepartments() {
+    const viewDepartments = 'SELECT * FROM department';
+    db.connect(async function(err) {
+        if(err) throw err;
+        await db.query(viewDepartments, function(err, results) {
+            if(err) throw err;
+            console.table(results);
+        });
+    });
+    displayMain();
+}
+
+function viewEmployeesByManager() {
+
+    const viewEmployeesByManager = `SELECT * FROM employee WHERE manager_id = ${manager_id}`;
+    db.connect(async function(err) {
+        if(err) throw err;
+        await db.query(viewEmployeesByManager, function(err, results) {
+            if(err) throw err;
+            console.table(results);
+        });
+    });
+    displayMain();
+}
+
+function viewEmployeesByDepartment() {
+    
+    const viewEmployeesByDepartment = `SELECT * FROM employee WHERE department_id = ${department_id}`;
+    db.connect(async function(err) {
+        if(err) throw err;
+        await db.query(viewEmployeesByDepartment, function(err, results) {
+            if(err) throw err;
+            console.table(results);
+        });
+    });
+    displayMain();
+}
+
 async function viewBudgetByDepartment() {
     inquirer
         .prompt(promptBudgetByDepartment)
@@ -209,6 +272,7 @@ async function viewBudgetByDepartment() {
         });
 }
 
+// Update functions
 async function updateEmployeeRole() {
     inquirer
         .prompt(promptUpdateEmployeeRole)
@@ -233,25 +297,34 @@ async function updateEmployeeManager() {
         });
 }
 
-async function addEmployee() {
+// Add functions
+function addEmployee() {
     inquirer
         .prompt(promptAddEmployee)
-        .then((response) => {
+        .then(async (response) => {
             let firstName = response.first_name;
             let lastName = response.last_name;
             let roleName = response.role_id;
             let managerFirstName = response.manager_id.split(" ")[0];
             let managerLastName = response.manager_id.split(" ")[1];
-            const roleID = `SELECT id FROM employee_role WHERE title="${roleName}"`;
-            const managerID = `SELECT id FROM employee WHERE (first_name="${managerFirstName}", last_name="${managerLastName}")`;
+            let roleID = `SELECT id FROM employee_role WHERE title="${roleName}"`;
+            let managerID = `SELECT id FROM employee WHERE (first_name="${managerFirstName}", last_name="${managerLastName}")`;
             const insertEmployee = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${firstName}", "${lastName}", ${roleID}, ${managerID})`;
-            await db.connect(function(err) {
+            await db.connect(async function(err) {
                 if(err) throw err;
-                db.query(insertEmployee, function (err, result) {
+                await db.query(roleID, function (err, result) {
+                    if(err) throw err;
+                    roleID = result;
+                })
+                await db.query(managerID, function (err, result) {
+                    if(err) throw err;
+                    managerID = result;
+                })
+                await db.query(insertEmployee, function (err) {
                     if(err) throw err;
                 })
             });
-            await displayMain();
+            displayMain();
         });
 }
 
@@ -290,6 +363,7 @@ async function addDepartment() {
         });
 }
 
+// Delete functions
 async function deleteEmployee() {
     inquirer
         .prompt(promptDeleteEmployee)
