@@ -112,7 +112,7 @@ const promptAddDepartment = [
 const promptDeleteEmployee = [
     {
         type: 'list',
-        name: 'employee_id',
+        name: 'employee_name',
         message: 'What is the name of the employee?',
         choices: employeeList,
     },
@@ -126,7 +126,7 @@ const promptDeleteEmployee = [
 const promptDeleteRole = [
     {
         type: 'list',
-        name: 'role_id',
+        name: 'role_name',
         message: 'What is the name of the role?',
         choices: roleList,
     },
@@ -140,7 +140,7 @@ const promptDeleteRole = [
 const promptDeleteDepartment = [
     {
         type: 'list',
-        name: 'department_id',
+        name: 'department_name',
         message: 'What is the name of the department?',
         choices: departmentList,
     },
@@ -270,9 +270,12 @@ function viewEmployeesByDepartment() {
 function viewBudgetByDepartment() {
     inquirer
         .prompt(promptBudgetByDepartment)
-        .then(async (response) => {
-            await db.queryPromise()
-            await displayMain();
+        .then((response) => {
+            db.connect(async function(err) {
+                if(err) throw err;
+                await db.queryPromise()
+            })
+            displayMain();
         });
 }
 
@@ -280,24 +283,24 @@ function viewBudgetByDepartment() {
 function updateEmployeeRole() {
     inquirer
         .prompt(promptUpdateEmployeeRole)
-        .then(async (response) => {
-            await db.connect(function(err) {
+        .then((response) => {
+            db.connect(async function(err) {
                 if(err) throw err;
-                db.queryPromise()
+                await db.queryPromise()
             })
-            await displayMain();
+            displayMain();
         });
 }
 
 function updateEmployeeManager() {
     inquirer
         .prompt(promptUpdateEmployeeManager)
-        .then(async (response) => {
-            await db.connect(function(err) {
+        .then((response) => {
+            db.connect(async function(err) {
                 if(err) throw err;
-                db.queryPromise()
+                await db.queryPromise()
             })
-            await displayMain();
+            displayMain();
         });
 }
 
@@ -305,7 +308,7 @@ function updateEmployeeManager() {
 function addEmployee() {
     inquirer
         .prompt(promptAddEmployee)
-        .then(async (response) => {
+        .then((response) => {
             let firstName = response.first_name;
             let lastName = response.last_name;
             let roleName = response.role_id;
@@ -314,7 +317,7 @@ function addEmployee() {
             let roleID = `SELECT id FROM employee_role WHERE title="${roleName}"`;
             let managerID = `SELECT id FROM employee WHERE (first_name="${managerFirstName}", last_name="${managerLastName}")`;
             const insertEmployee = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${firstName}", "${lastName}", ${roleID}, ${managerID})`;
-            await db.connect(async function(err) {
+            db.connect(async function(err) {
                 if(err) throw err;
                 await db.queryPromise(roleID, function (err, result) {
                     if(err) throw err;
@@ -335,35 +338,35 @@ function addEmployee() {
 function addRole() {
     inquirer
         .prompt(promptAddRole)
-        .then(async (response) => {
+        .then((response) => {
             let roleName = response.role_name;
             let roleSalary = response.role_salary;
             let departmentName = response.department_id;
             const departmentID = `SELECT id FROM department WHERE department_name="${departmentName}"`;
             const insertRole = `INSERT INTO employee_role (role_name, role_salary, department_id) VALUES ("${roleName}", "${roleSalary}", ${departmentID})`;
-            await db.connect(function(err) {
+            db.connect(async function(err) {
                 if(err) throw err;
-                db.queryPromise(insertRole, function (err, results) {
+                await db.queryPromise(insertRole, function (err, results) {
                     if(err) throw err;
                 })
             });
-            await displayMain();
+            displayMain();
         });
 }
 
 function addDepartment() {
     inquirer
         .prompt(promptAddDepartment)
-        .then(async (response) => {
+        .then((response) => {
             let departmentName = response.department_name;
             const insertDepartment = `INSERT INTO department (department_name) VALUES ("${departmentName}")`;
-            await db.connect(function(err) {
+            db.connect(async function(err) {
                 if(err) throw err;
-                db.queryPromise(insertDepartment, function (err, results) {
+                await db.queryPromise(insertDepartment, function (err, results) {
                     if(err) throw err;
                 })
             })
-            await displayMain();
+            displayMain();
         });
 }
 
@@ -371,41 +374,90 @@ function addDepartment() {
 function deleteEmployee() {
     inquirer
         .prompt(promptDeleteEmployee)
-        .then(async (response) => {
-            await db.connect(function(err) {
-                if(err) throw err;
-                db.queryPromise()
-            })
-            await displayMain();
+        .then((response) => {
+            if (response.delete_employee === true) {
+                const deleteAnEmployee = `DELETE FROM employee WHERE first_name = SUBSTRING_INDEX(${response.employee_name}, ' ', 1) AND last_name = SUBSTRING_INDEX(${response.employee_name}, ' ', 2)`;
+                db.connect(async function(err) {
+                    if(err) throw err;
+                    await db.queryPromise(deleteAnEmployee, function (err) {
+                        if(err) throw err;
+                    });
+                });
+                displayMain();
+            } else {
+                displayMain();
+            }
         });
 }
 
 function deleteRole() {
     inquirer
         .prompt(promptDeleteRole)
-        .then(async (response) => {
-            await db.connect(function(err) {
-                if(err) throw err;
-                db.queryPromise()
-            })
-            await displayMain();
+        .then((response) => {
+            if (response.delete_role === true) {
+                const deleteARole = `DELETE FROM employee_role WHERE title = ${response.role_name}`;
+                db.connect(async function(err) {
+                    if(err) throw err;
+                    await db.queryPromise(deleteARole, function (err) {
+                        if(err) throw err;
+                    });
+                });
+                displayMain();
+            } else {
+                displayMain();
+            }
         });
 }
 
 function deleteDepartment() {
     inquirer
         .prompt(promptDeleteDepartment)
-        .then(async (response) => {
-            await db.connect(function(err) {
-                if(err) throw err;
-                db.queryPromise()
-            })
-            await displayMain();
+        .then((response) => {
+            if (response.delete_department === true) {
+                const deleteADepartment = `DELETE FROM department WHERE department_name = ${response.department_name}`;
+                db.connect(async function(err) {
+                    if(err) throw err;
+                    await db.queryPromise(deleteADepartment, function (err) {
+                        if(err) throw err;
+                    });
+                });
+                displayMain();
+            } else {
+                displayMain();
+            }
         });
 }
 
 // Initialize connection to database and start program
-db.connect(function(err) {
-    if(err) throw err;
+function init() {
+    db.connect(async function(err) {
+        let employees = "SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM employee";
+        let roles = 'SELECT title FROM employee_role';
+        let departments = 'SELECT department_name FROM department';
+        await db.queryPromise(employees, function (err, results) {
+            if(err) throw err;
+            for (let i = 0; i < results.length; i++) {
+                employeeList.push(results[i].full_name)
+            }
+            // console.log(employeeList);
+        })
+        await db.queryPromise(roles, function (err, results) {
+            if(err) throw err;
+            for (let i = 0; i < results.length; i++) {
+                roleList.push(results[i].title)
+            }
+            console.log(roleList);
+        })
+        await db.queryPromise(departments, function (err, results) {
+            if(err) throw err;
+            for (let i = 0; i < results.length; i++) {
+                departmentList.push(results[i].department_name)
+            }
+            console.log(departmentList);
+        })
+    });
     displayMain();
-});
+}
+
+init();
+
