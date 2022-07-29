@@ -19,7 +19,7 @@ clone repo, create .env with password and username, npm install, run schema.sql 
 Follow prompt directions
 
 ### Walkthrough Video
-[Employee-Database-Manager Walkthrough](https://briceveyna.github.io/Employee-Database-Manager/)
+[Employee-Database-Manager Walkthrough](https://github.com/BriceVeyna/Employee-Database-Manager/blob/main/assets/Demo.webm)
 
 ## Features
 
