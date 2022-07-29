@@ -1,5 +1,6 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
+const util = require('util');
 // const generateDatabase = require('./utils/generateDatabase');
 
 // Global list variables
@@ -11,7 +12,7 @@ const departmentList = [];
 const promptMain = [
     {
         type: 'list',
-        name: 'main menu',
+        name: 'main_menu',
         message: 'What would you like to do?',
         choices: ['View All Employees', 'View All Roles', 'View All Departments', 'View Employees By Manager', 'View Employees By Department', 'View Total Utilized Budget By Department', 'Update Employee Role', 'Update Employee Manager', 'Add Employee', 'Add Role', 'Add Department', 'Delete Employee', 'Delete Role', 'Delete Department', 'Quit']
     },
@@ -154,8 +155,8 @@ const promptDeleteDepartment = [
 const db = mysql.createConnection(
     {
         host: 'localhost',
-        user: '',
-        password: '',
+        user: 'root',
+        password: 'password',
         database: 'company_db'
     },
     console.log('Connected to the database')
@@ -166,33 +167,33 @@ function displayMain() {
     inquirer
         .prompt(promptMain)
         .then((response) => {
-            if (response.includes("View All Employees")) {
+            if (response.main_menu.includes("View All Employees")) {
                 viewAllEmployees();
-            } else if (response.includes("View All Roles")) {
+            } else if (response.main_menu.includes("View All Roles")) {
                 viewAllRoles();
-            } else if (response.includes("View All Departments")) {
+            } else if (response.main_menu.includes("View All Departments")) {
                 viewAllDepartments();
-            } else if (response.includes("View Employees By Manager")) {
+            } else if (response.main_menu.includes("View Employees By Manager")) {
                 viewEmployeesByManager();
-            } else if (response.includes("View Employees By Department")) {
+            } else if (response.main_menu.includes("View Employees By Department")) {
                 viewEmployeesByDepartment();
-            } else if (response.includes("View Total Utilized Budget By Department")) {
+            } else if (response.main_menu.includes("View Total Utilized Budget By Department")) {
                 viewBudgetByDepartment();
-            } else if (response.includes("Update Employee Role")) {
+            } else if (response.main_menu.includes("Update Employee Role")) {
                 updateEmployeeRole();
-            } else if (response.includes("Update Employee Manager")) {
+            } else if (response.main_menu.includes("Update Employee Manager")) {
                 updateEmployeeManager();
-            } else if (response.includes("Add Employee")) {
+            } else if (response.main_menu.includes("Add Employee")) {
                 addEmployee();
-            } else if (response.includes("Add Role")) {
+            } else if (response.main_menu.includes("Add Role")) {
                 addRole();
-            } else if (response.includes("Add Department")) {
+            } else if (response.main_menu.includes("Add Department")) {
                 addDepartment();
-            } else if (response.includes("Delete Employee")) {
+            } else if (response.main_menu.includes("Delete Employee")) {
                 deleteEmployee();
-            } else if (response.includes("Delete Role")) {
+            } else if (response.main_menu.includes("Delete Role")) {
                 deleteRole();
-            } else if (response.includes("Delete Department")) {
+            } else if (response.main_menu.includes("Delete Department")) {
                 deleteDepartment();
             } else {
                 db.end();
@@ -200,12 +201,15 @@ function displayMain() {
         });
 }
 
+// Promisify database query and main function
+db.queryPromise = util.promisify(db.query);
+
 // View functions
 function viewAllEmployees() {
     const viewEmployees = 'SELECT * FROM employee';
     db.connect(async function(err) {
         if(err) throw err;
-        await db.query(viewEmployees, function(err, results) {
+        await db.queryPromise(viewEmployees, function(err, results) {
             if(err) throw err;
             console.table(results);
         });
@@ -217,7 +221,7 @@ function viewAllRoles() {
     const viewRoles = 'SELECT * FROM employee_role';
     db.connect(async function(err) {
         if(err) throw err;
-        await db.query(viewRoles, function(err, results) {
+        await db.queryPromise(viewRoles, function(err, results) {
             if(err) throw err;
             console.table(results);
         });
@@ -229,7 +233,7 @@ function viewAllDepartments() {
     const viewDepartments = 'SELECT * FROM department';
     db.connect(async function(err) {
         if(err) throw err;
-        await db.query(viewDepartments, function(err, results) {
+        await db.queryPromise(viewDepartments, function(err, results) {
             if(err) throw err;
             console.table(results);
         });
@@ -242,7 +246,7 @@ function viewEmployeesByManager() {
     const viewEmployeesByManager = `SELECT * FROM employee WHERE manager_id = ${manager_id}`;
     db.connect(async function(err) {
         if(err) throw err;
-        await db.query(viewEmployeesByManager, function(err, results) {
+        await db.queryPromise(viewEmployeesByManager, function(err, results) {
             if(err) throw err;
             console.table(results);
         });
@@ -251,11 +255,11 @@ function viewEmployeesByManager() {
 }
 
 function viewEmployeesByDepartment() {
-    
+
     const viewEmployeesByDepartment = `SELECT * FROM employee WHERE department_id = ${department_id}`;
     db.connect(async function(err) {
         if(err) throw err;
-        await db.query(viewEmployeesByDepartment, function(err, results) {
+        await db.queryPromise(viewEmployeesByDepartment, function(err, results) {
             if(err) throw err;
             console.table(results);
         });
@@ -263,35 +267,35 @@ function viewEmployeesByDepartment() {
     displayMain();
 }
 
-async function viewBudgetByDepartment() {
+function viewBudgetByDepartment() {
     inquirer
         .prompt(promptBudgetByDepartment)
-        .then((response) => {
-            await db.query()
+        .then(async (response) => {
+            await db.queryPromise()
             await displayMain();
         });
 }
 
 // Update functions
-async function updateEmployeeRole() {
+function updateEmployeeRole() {
     inquirer
         .prompt(promptUpdateEmployeeRole)
-        .then((response) => {
+        .then(async (response) => {
             await db.connect(function(err) {
                 if(err) throw err;
-                db.query()
+                db.queryPromise()
             })
             await displayMain();
         });
 }
 
-async function updateEmployeeManager() {
+function updateEmployeeManager() {
     inquirer
         .prompt(promptUpdateEmployeeManager)
-        .then((response) => {
+        .then(async (response) => {
             await db.connect(function(err) {
                 if(err) throw err;
-                db.query()
+                db.queryPromise()
             })
             await displayMain();
         });
@@ -312,15 +316,15 @@ function addEmployee() {
             const insertEmployee = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${firstName}", "${lastName}", ${roleID}, ${managerID})`;
             await db.connect(async function(err) {
                 if(err) throw err;
-                await db.query(roleID, function (err, result) {
+                await db.queryPromise(roleID, function (err, result) {
                     if(err) throw err;
                     roleID = result;
                 })
-                await db.query(managerID, function (err, result) {
+                await db.queryPromise(managerID, function (err, result) {
                     if(err) throw err;
                     managerID = result;
                 })
-                await db.query(insertEmployee, function (err) {
+                await db.queryPromise(insertEmployee, function (err) {
                     if(err) throw err;
                 })
             });
@@ -328,10 +332,10 @@ function addEmployee() {
         });
 }
 
-async function addRole() {
+function addRole() {
     inquirer
         .prompt(promptAddRole)
-        .then((response) => {
+        .then(async (response) => {
             let roleName = response.role_name;
             let roleSalary = response.role_salary;
             let departmentName = response.department_id;
@@ -339,7 +343,7 @@ async function addRole() {
             const insertRole = `INSERT INTO employee_role (role_name, role_salary, department_id) VALUES ("${roleName}", "${roleSalary}", ${departmentID})`;
             await db.connect(function(err) {
                 if(err) throw err;
-                db.query(insertRole, function (err, results) {
+                db.queryPromise(insertRole, function (err, results) {
                     if(err) throw err;
                 })
             });
@@ -347,15 +351,15 @@ async function addRole() {
         });
 }
 
-async function addDepartment() {
+function addDepartment() {
     inquirer
         .prompt(promptAddDepartment)
-        .then((response) => {
+        .then(async (response) => {
             let departmentName = response.department_name;
             const insertDepartment = `INSERT INTO department (department_name) VALUES ("${departmentName}")`;
             await db.connect(function(err) {
                 if(err) throw err;
-                db.query(insertDepartment, function (err, results) {
+                db.queryPromise(insertDepartment, function (err, results) {
                     if(err) throw err;
                 })
             })
@@ -364,37 +368,37 @@ async function addDepartment() {
 }
 
 // Delete functions
-async function deleteEmployee() {
+function deleteEmployee() {
     inquirer
         .prompt(promptDeleteEmployee)
-        .then((response) => {
+        .then(async (response) => {
             await db.connect(function(err) {
                 if(err) throw err;
-                db.query()
+                db.queryPromise()
             })
             await displayMain();
         });
 }
 
-async function deleteRole() {
+function deleteRole() {
     inquirer
         .prompt(promptDeleteRole)
-        .then((response) => {
+        .then(async (response) => {
             await db.connect(function(err) {
                 if(err) throw err;
-                db.query()
+                db.queryPromise()
             })
             await displayMain();
         });
 }
 
-async function deleteDepartment() {
+function deleteDepartment() {
     inquirer
         .prompt(promptDeleteDepartment)
-        .then((response) => {
+        .then(async (response) => {
             await db.connect(function(err) {
                 if(err) throw err;
-                db.query()
+                db.queryPromise()
             })
             await displayMain();
         });

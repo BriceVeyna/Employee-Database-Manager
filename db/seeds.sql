@@ -8,17 +8,17 @@ VALUES  ("Corporate"),
         ("Warehouse");
 
 INSERT INTO employee_role(title, salary, department_id)
-VALUES  ("CFO", "400,000", 1),
-        ("Regional Manager", "65,000", 2),
-        ("Sales Representative", "70,000+", 3),
-        ("Accountant", "55,000", 4),
-        ("HR Representative", "40,000", 5),
-        ("Receptionist", "25,000", 6),
-        ("Foreman", "60,000", 7),
-        ("Quality Assurance Representative", "40,000", NULL),
-        ("Customer Service Representative", "35,000", NULL),
-        ("Supplier Relations Representative", "60,000", NULL),
-        ("Temp", "35,000", NULL);
+VALUES  ("CFO", "400000", 1),
+        ("Regional Manager", "65000", 2),
+        ("Sales Representative", "70000", 3),
+        ("Accountant", "55000", 4),
+        ("HR Representative", "40000", 5),
+        ("Receptionist", "25000", 6),
+        ("Foreman", "60000", 7),
+        ("Quality Assurance Representative", "40000", NULL),
+        ("Customer Service Representative", "35000", NULL),
+        ("Supplier Relations Representative", "60000", NULL),
+        ("Temp", "35000", NULL);
 
 INSERT INTO employee(first_name, last_name, role_id, manager_id)
 VALUES  ("David", "Wallace", 1, NULL),
