@@ -5,6 +5,7 @@ const util = require('util');
 
 // Global list variables
 const employeeList = [];
+const managerList = ['None'];
 const roleList = [];
 const departmentList = [];
 
@@ -45,15 +46,15 @@ const promptUpdateEmployeeRole = [
 const promptUpdateEmployeeManager = [
     {
         type: 'list',
-        name: 'employee_id',
+        name: 'employee_name',
         message: "Which employee's manager do you want to update?",
         choices: employeeList,
     },
     {
         type: 'list',
-        name: 'manager_id',
+        name: 'manager_name',
         message: "Which manager do you want to assign the selected employee?",
-        choices: employeeList,
+        choices: managerList,
     },
 ];
 
@@ -284,14 +285,11 @@ function updateEmployeeRole() {
     inquirer
         .prompt(promptUpdateEmployeeRole)
         .then((response) => {
-            let roleID = `SELECT id FROM employee_role WHERE title = "${response.role_name}"`
-            let updateRole = `UPDATE employee SET role_id = ${roleID} WHERE first_name = SUBSTRING_INDEX(${response.employee_name}, ' ', 1) AND last_name = SUBSTRING_INDEX(${response.employee_name}, ' ', 2)`
+            const employeeFirstName = response.employee_name.split(" ")[0];
+            const employeeLastName = response.employee_name.split(" ")[1];
+            const updateRole = `UPDATE employee SET role_id = (SELECT id FROM employee_role WHERE title = "${response.role_name}") WHERE first_name = "${employeeFirstName}" AND last_name = "${employeeLastName}"`;
             db.connect(async function(err) {
                 if(err) throw err;
-                await db.queryPromise(roleID, function (err, result) {
-                    if(err) throw err;
-                    roleID = result;
-                });
                 await db.queryPromise(updateRole, function (err) {
                     if(err) throw err;
                 });
@@ -304,10 +302,22 @@ function updateEmployeeManager() {
     inquirer
         .prompt(promptUpdateEmployeeManager)
         .then((response) => {
+            const employeeFirstName = response.employee_name.split(" ")[0];
+            const employeeLastName = response.employee_name.split(" ")[1];
+            let updateManager = ``;
+            if (response.manager_name === 'None') {
+                updateManager = `UPDATE employee SET manager_id = NULL WHERE first_name = "${employeeFirstName}" AND last_name = "${employeeLastName}"`;
+            } else {
+                const managerFirstName = response.manager_name.split(" ")[0];
+                const managerLastName = response.manager_name.split(" ")[1];
+                updateManager = `UPDATE employee as e, (SELECT id FROM employee WHERE first_name = "${managerFirstName}" AND last_name = "${managerLastName}") as m SET e.manager_id = m.id WHERE first_name = "${employeeFirstName}" AND last_name = "${employeeLastName}"`;
+            }
             db.connect(async function(err) {
                 if(err) throw err;
-                await db.queryPromise()
-            })
+                await db.queryPromise(updateManager, function (err) {
+                    if(err) throw err;
+                });
+            });
             displayMain();
         });
 }
@@ -435,32 +445,31 @@ function deleteDepartment() {
 
 // Initialize connection to database and start program
 function init() {
-    db.connect(async function(err) {
-        let employees = "SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM employee";
-        let roles = 'SELECT title FROM employee_role';
-        let departments = 'SELECT department_name FROM department';
-        await db.queryPromise(employees, function (err, results) {
+        const employees = "SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM employee";
+        const roles = 'SELECT title FROM employee_role';
+        const departments = 'SELECT department_name FROM department';
+        db.query(employees, function (err, results) {
             if(err) throw err;
             for (let i = 0; i < results.length; i++) {
-                employeeList.push(results[i].full_name)
+                employeeList.push(results[i].full_name);
+                managerList.push(results[i].full_name);
             }
             // console.log(employeeList);
-        })
-        await db.queryPromise(roles, function (err, results) {
+        });
+        db.query(roles, function (err, results) {
             if(err) throw err;
             for (let i = 0; i < results.length; i++) {
-                roleList.push(results[i].title)
+                roleList.push(results[i].title);
             }
-            console.log(roleList);
+            // console.log(roleList);
         })
-        await db.queryPromise(departments, function (err, results) {
+        db.query(departments, function (err, results) {
             if(err) throw err;
             for (let i = 0; i < results.length; i++) {
-                departmentList.push(results[i].department_name)
+                departmentList.push(results[i].department_name);
             }
-            console.log(departmentList);
+            // console.log(departmentList);
         })
-    });
     displayMain();
 }
 
