@@ -19,10 +19,28 @@ const promptMain = [
     },
 ];
 
+const promptEmployeesByManager = [
+    {
+        type: 'list',
+        name: 'manager_name',
+        message: "Which manager's employees would you like to view?",
+        choices: managerList,
+    },
+];
+
+const promptEmployeesByDepartment = [
+    {
+        type: 'list',
+        name: 'department_name',
+        message: "Which department's employees would you like to view?",
+        choices: departmentList,
+    },
+];
+
 const promptBudgetByDepartment = [
     {
         type: 'list',
-        name: 'department_id',
+        name: 'department_name',
         message: "Which department's total utilized budget would you like to view?",
         choices: departmentList,
     },
@@ -243,29 +261,37 @@ function viewAllDepartments() {
 }
 
 function viewEmployeesByManager() {
-
-    const viewEmployeesByManager = `SELECT * FROM employee WHERE manager_id = ${manager_id}`;
-    db.connect(async function(err) {
-        if(err) throw err;
-        await db.queryPromise(viewEmployeesByManager, function(err, results) {
-            if(err) throw err;
-            console.table(results);
+    inquirer
+        .prompt(promptEmployeesByManager)
+        .then((response) => {
+            const managerFirstName = response.manager_name.split(" ")[0];
+            const managerLastName = response.manager_name.split(" ")[1];
+            const employeesByManager = `SELECT * FROM employee WHERE manager_id = (SELECT id FROM employee WHERE first_name = "${managerFirstName}" AND last_name = "${managerLastName}"`;
+            db.connect(async function(err) {
+                if(err) throw err;
+                await db.queryPromise(employeesByManager, function(err, results) {
+                    if(err) throw err;
+                    console.table(results);
+                });
+            });
+            displayMain();
         });
-    });
-    displayMain();
 }
 
 function viewEmployeesByDepartment() {
-
-    const viewEmployeesByDepartment = `SELECT * FROM employee WHERE department_id = ${department_id}`;
-    db.connect(async function(err) {
-        if(err) throw err;
-        await db.queryPromise(viewEmployeesByDepartment, function(err, results) {
-            if(err) throw err;
-            console.table(results);
+    inquirer
+        .prompt(promptEmployeesByDepartment)
+        .then((response) => {
+            const employeesByDepartment = `SELECT * FROM employee WHERE role_id = (SELECT id FROM employee_role WHERE department_id = (SELECT id FROM department WHERE department_name = "${response.department_name}"))`;
+            db.connect(async function(err) {
+                if(err) throw err;
+                await db.queryPromise(employeesByDepartment, function(err, results) {
+                    if(err) throw err;
+                    console.table(results);
+                });
+            });
+            displayMain();
         });
-    });
-    displayMain();
 }
 
 function viewBudgetByDepartment() {
@@ -273,9 +299,13 @@ function viewBudgetByDepartment() {
         .prompt(promptBudgetByDepartment)
         .then((response) => {
             db.connect(async function(err) {
+                const budgetByDepartment = `SELECT * FROM employee INNER JOIN employee_role ON employee.role_id = employee_role.id, SELECT SUM(employee.salary) FROM employee WHERE department_id = (SELECT id FROM department WHERE department_name = "${response.department_name}")`
                 if(err) throw err;
-                await db.queryPromise()
-            })
+                await db.queryPromise(budgetByDepartment, function(err, results) {
+                    if(err) throw err;
+                    console.table(results);
+                });
+            });
             displayMain();
         });
 }

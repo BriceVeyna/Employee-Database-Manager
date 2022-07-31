@@ -13,7 +13,10 @@ This project is a program that creates a command line content management system 
 - [License](#license)
 
 ## Installation
-clone repo, create .env with password and username, npm install, run schema.sql and seeds.sql in mysql, node index.js to start
+1. Clone the repository
+2. Install the required packages with npm install
+3. Log into mysql shell and run schema.sql and seeds.sql then quit the shell
+4. Initialize the program with node index.js
 
 ## Usage
 Follow prompt directions
