@@ -419,6 +419,10 @@ function deleteEmployee() {
                 let employeeFirstName = response.employee_name.split(" ")[0];
                 let employeeLastName = response.employee_name.split(" ")[1];
                 const deleteAnEmployee = `DELETE FROM employee WHERE first_name = "${employeeFirstName}" AND last_name = "${employeeLastName}"`;
+                const employeeIndex = employeeList.indexOf(response.employee_name);
+                employeeList.splice(employeeIndex, 1);
+                const managerIndex = managerList.indexOf(response.employee_name);
+                managerList.splice(managerIndex, 1);
                 db.query(deleteAnEmployee, function (err) {
                     if(err) throw err;
                 });
@@ -435,6 +439,8 @@ function deleteRole() {
         .then((response) => {
             if (response.delete_role === true) {
                 const deleteARole = `DELETE FROM employee_role WHERE title = "${response.role_name}"`;
+                const index = roleList.indexOf(response.role_name);
+                roleList.splice(index, 1);
                 db.query(deleteARole, function (err) {
                     if(err) throw err;
                 });
@@ -451,6 +457,8 @@ function deleteDepartment() {
         .then((response) => {
             if (response.delete_department === true) {
                 const deleteADepartment = `DELETE FROM department WHERE department_name = "${response.department_name}"`;
+                const index = departmentList.indexOf(response.department_name);
+                departmentList.splice(index, 1);
                 db.query(deleteADepartment, function (err) {
                     if(err) throw err;
                 });
