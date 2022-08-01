@@ -362,7 +362,6 @@ function addEmployee() {
             let insertEmployee = '';
             if (response.manager_name === 'None') {
                 insertEmployee = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${response.first_name}", "${response.last_name}", (SELECT id FROM employee_role WHERE title="${response.role_name}"), NULL)`;
-                console.log(insertEmployee);
             } else {
                 let managerFirstName = response.manager_name.split(" ")[0];
                 let managerLastName = response.manager_name.split(" ")[1];
@@ -417,12 +416,11 @@ function deleteEmployee() {
         .prompt(promptDeleteEmployee)
         .then((response) => {
             if (response.delete_employee === true) {
-                const deleteAnEmployee = `DELETE FROM employee WHERE first_name = SUBSTRING_INDEX(${response.employee_name}, ' ', 1) AND last_name = SUBSTRING_INDEX(${response.employee_name}, ' ', 2)`;
-                db.connect(async function(err) {
+                let employeeFirstName = response.employee_name.split(" ")[0];
+                let employeeLastName = response.employee_name.split(" ")[1];
+                const deleteAnEmployee = `DELETE FROM employee WHERE first_name = "${employeeFirstName}" AND last_name = "${employeeLastName}"`;
+                db.query(deleteAnEmployee, function (err) {
                     if(err) throw err;
-                    await db.queryPromise(deleteAnEmployee, function (err) {
-                        if(err) throw err;
-                    });
                 });
                 displayMain();
             } else {
@@ -436,12 +434,9 @@ function deleteRole() {
         .prompt(promptDeleteRole)
         .then((response) => {
             if (response.delete_role === true) {
-                const deleteARole = `DELETE FROM employee_role WHERE title = ${response.role_name}`;
-                db.connect(async function(err) {
+                const deleteARole = `DELETE FROM employee_role WHERE title = "${response.role_name}"`;
+                db.query(deleteARole, function (err) {
                     if(err) throw err;
-                    await db.queryPromise(deleteARole, function (err) {
-                        if(err) throw err;
-                    });
                 });
                 displayMain();
             } else {
@@ -455,12 +450,9 @@ function deleteDepartment() {
         .prompt(promptDeleteDepartment)
         .then((response) => {
             if (response.delete_department === true) {
-                const deleteADepartment = `DELETE FROM department WHERE department_name = ${response.department_name}`;
-                db.connect(async function(err) {
+                const deleteADepartment = `DELETE FROM department WHERE department_name = "${response.department_name}"`;
+                db.query(deleteADepartment, function (err) {
                     if(err) throw err;
-                    await db.queryPromise(deleteADepartment, function (err) {
-                        if(err) throw err;
-                    });
                 });
                 displayMain();
             } else {
