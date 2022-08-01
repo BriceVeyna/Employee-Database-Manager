@@ -95,9 +95,9 @@ const promptAddEmployee = [
     },
     {
         type: 'list',
-        name: 'manager_id',
+        name: 'manager_name',
         message: "Who is the employee's manager?",
-        choices: employeeList,
+        choices: managerList,
     },
 ];
 
@@ -359,25 +359,22 @@ function addEmployee() {
         .then((response) => {
             let full_name = response.first_name.concat(" ", response.last_name);
             employeeList.push(full_name);
-            let managerFirstName = response.manager_id.split(" ")[0];
-            let managerLastName = response.manager_id.split(" ")[1];
-            let roleID = `SELECT id FROM employee_role WHERE title="${response.role_name}"`;
-            let managerID = `SELECT id FROM employee WHERE (first_name="${managerFirstName}", last_name="${managerLastName}")`;
-            const insertEmployee = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${response.first_name}", "${response.last_name}", ${roleID}, ${managerID})`;
+            let insertEmployee = '';
+            if (response.manager_name === 'None') {
+                insertEmployee = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${response.first_name}", "${response.last_name}", (SELECT id FROM employee_role WHERE title="${response.role_name}"), NULL)`;
+                console.log(insertEmployee);
+            } else {
+                let managerFirstName = response.manager_name.split(" ")[0];
+                let managerLastName = response.manager_name.split(" ")[1];
+                insertEmployee = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${response.first_name}", "${response.last_name}", (SELECT id FROM employee_role WHERE title="${response.role_name}"), (SELECT id FROM employee WHERE (first_name="${managerFirstName}", last_name="${managerLastName}")))`;
+            }
             db.connect(async function(err) {
                 if(err) throw err;
-                await db.queryPromise(roleID, function (err, result) {
-                    if(err) throw err;
-                    roleID = result;
-                })
-                await db.queryPromise(managerID, function (err, result) {
-                    if(err) throw err;
-                    managerID = result;
-                })
                 await db.queryPromise(insertEmployee, function (err) {
                     if(err) throw err;
                 })
             });
+            managerList.push(full_name);
             displayMain();
         });
 }
@@ -387,11 +384,10 @@ function addRole() {
         .prompt(promptAddRole)
         .then((response) => {
             roleList.push(response.role_name);
-            const departmentID = `SELECT id FROM department WHERE department_name="${response.department_name}"`;
-            const insertRole = `INSERT INTO employee_role (role_name, role_salary, department_id) VALUES ("${response.role_name}", "${response.role_salary}", ${departmentID})`;
+            const insertRole = `INSERT INTO employee_role (title, salary, department_id) VALUES ("${response.role_name}", "${response.role_salary}", (SELECT id FROM department WHERE department_name="${response.department_name}"))`;
             db.connect(async function(err) {
                 if(err) throw err;
-                await db.queryPromise(insertRole, function (err, results) {
+                await db.queryPromise(insertRole, function (err) {
                     if(err) throw err;
                 })
             });
@@ -403,7 +399,7 @@ function addDepartment() {
     inquirer
         .prompt(promptAddDepartment)
         .then((response) => {
-            departmentList.push(response.department_name)
+            departmentList.push(response.department_name);
             const insertDepartment = `INSERT INTO department (department_name) VALUES ("${response.department_name}")`;
             db.connect(async function(err) {
                 if(err) throw err;
